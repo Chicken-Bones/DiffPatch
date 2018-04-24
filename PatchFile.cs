@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Terraria.ModLoader.DiffPatch
+namespace DiffPatch
 {
 	public class PatchFile
 	{

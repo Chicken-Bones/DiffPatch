@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace Terraria.ModLoader.DiffPatch
+namespace DiffPatch
 {
 	public class ReadOnlyListSlice<T> : IReadOnlyList<T>
 	{

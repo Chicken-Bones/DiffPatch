@@ -1,4 +1,4 @@
-﻿namespace Terraria.ModLoader.DiffPatch
+﻿namespace DiffPatch
 {
 	public enum Operation
 	{

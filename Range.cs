@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Terraria.ModLoader.DiffPatch
+namespace DiffPatch
 {
 	public struct Range
 	{

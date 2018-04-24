@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Terraria.ModLoader.DiffPatch
+namespace DiffPatch
 {
 	public class PatienceDiff : PatienceMatch
 	{
