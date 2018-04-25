@@ -198,12 +198,15 @@ namespace DiffPatch
 			if (lmText == null)
 				LinesToChars();
 
+			if (patch.length1 > textLines.Count)
+				return false;
+
 			int loc = patch.start2 + searchOffset;
 			if (loc < 0) loc = 0;
 			else if (loc >= textLines.Count) loc = textLines.Count - 1;
 
 			int forward = lmText.IndexOf(patch.lmContext, loc, StringComparison.Ordinal);
-			int reverse = lmText.LastIndexOf(patch.lmContext, loc + patch.length1, StringComparison.Ordinal);
+			int reverse = lmText.LastIndexOf(patch.lmContext, loc, StringComparison.Ordinal);
 			if (reverse < lastPatchedLine)
 				reverse = -1;
 
@@ -260,9 +263,10 @@ namespace DiffPatch
 			//finish our new patch
 			fuzzyPatch.RecalculateLength();
 			if (wmLines != null) fuzzyPatch.WordsToChars(charRep);
-			if (lmText != null) fuzzyPatch.LinesToChars(charRep); 
+			if (lmText != null) fuzzyPatch.LinesToChars(charRep);
 
-			patch.Succeed(Mode.FUZZY, ApplyExactAt(match[0], fuzzyPatch));
+			int at = match.First(i => i >= 0); //if the patch needs lines trimmed off it, the early match entries will be negative
+			patch.Succeed(Mode.FUZZY, ApplyExactAt(at, fuzzyPatch));
 			patch.AddOffsetResult(fuzzyPatch.start2 - loc, textLines.Count);
 			patch.AddFuzzyResult(matchQuality);
 			return true;
