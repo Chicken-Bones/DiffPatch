@@ -225,6 +225,9 @@ namespace DiffPatch
 				WordsToChars();
 
 			int loc = patch.start2 + searchOffset;
+			if (loc + patch.length1 > wmLines.Count)//initialise search at end of file if loc is past file length
+				loc = wmLines.Count - patch.length1;
+
 			int[] match = FindMatch(loc, patch.wmContext, out float matchQuality);
 			if (match == null)
 				return false;
@@ -289,7 +292,7 @@ namespace DiffPatch
 			mmReverse.Initialize(loc);
 
 			int warnDist = OffsetWarnDistance(wmContext.Count, textLines.Count);
-			for (int i = 0; mmForward.CanStepForward && mmReverse.CanStepBackward; i++) {
+			for (int i = 0; mmForward.CanStepForward || mmReverse.CanStepBackward; i++) {
 				//within the warning range it's a straight up fight
 				//past the warning range, quality is reduced by 10% per warning range
 				float penalty = i < warnDist ? 0 : 0.1f * i / warnDist;
