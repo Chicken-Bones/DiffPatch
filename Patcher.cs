@@ -90,7 +90,7 @@ namespace DiffPatch
 		public static int OffsetWarnDistance(int patchLength, int fileLength) => Math.Max(patchLength * 10, fileLength / 10);
 
 		private readonly IReadOnlyList<WorkingPatch> patches;
-		private List<string> textLines;
+		private List<string> lines;
 		private bool applied;
 
 		//we maintain delta as the offset of the last patch (applied location - expected location)
@@ -102,15 +102,16 @@ namespace DiffPatch
 		//to prevent offset or fuzzy searching too far back
 		private int lastPatchedLine;
 
-		private readonly CharRepresenter charRep = new CharRepresenter();
+		private readonly CharRepresenter charRep;
 		private string lmText;
 		private List<string> wmLines;
 
 		public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
 
-		public Patcher(IEnumerable<Patch> patches, IEnumerable<string> lines) {
+		public Patcher(IEnumerable<Patch> patches, IEnumerable<string> lines, CharRepresenter charRep = null) {
 			this.patches = patches.Select(p => new WorkingPatch(p)).ToList();
-			textLines = new List<string>(lines);
+			this.lines = new List<string>(lines);
+			this.charRep = charRep ?? new CharRepresenter();
 		}
 
 		public void Patch(Mode mode) {
@@ -133,29 +134,29 @@ namespace DiffPatch
 			}
 		}
 
-		public string[] ResultLines => textLines.ToArray();
+		public string[] ResultLines => lines.ToArray();
 		public IEnumerable<Result> Results => patches.Select(p => p.result);
 
 		private void LinesToChars() {
 			foreach (var patch in patches)
 				patch.LinesToChars(charRep);
 
-			lmText = charRep.LinesToChars(textLines);
+			lmText = charRep.LinesToChars(lines);
 		}
 
 		private void WordsToChars() {
 			foreach (var patch in patches)
 				patch.WordsToChars(charRep);
 
-			wmLines = textLines.Select(charRep.WordsToChars).ToList();
+			wmLines = lines.Select(charRep.WordsToChars).ToList();
 		}
 
 		private Patch ApplyExactAt(int loc, WorkingPatch patch) {
-			if (!patch.ContextLines.SequenceEqual(textLines.GetRange(loc, patch.length1)))
+			if (!patch.ContextLines.SequenceEqual(lines.GetRange(loc, patch.length1)))
 				throw new Exception("Patch engine failure");
 
-			textLines.RemoveRange(loc, patch.length1);
-			textLines.InsertRange(loc, patch.PatchedLines);
+			lines.RemoveRange(loc, patch.length1);
+			lines.InsertRange(loc, patch.PatchedLines);
 
 			//update the lineModeText
 			if (lmText != null)
@@ -167,9 +168,9 @@ namespace DiffPatch
 				wmLines.InsertRange(loc, patch.wmPatched);
 			}
 
-			Patch applied = patch;
-			if (applied.start2 != loc || applied.start1 != loc - patchedDelta)
-				applied = new Patch(patch) { //create a new patch with different applied position if necessary
+			Patch appliedPatch = patch;
+			if (appliedPatch.start2 != loc || appliedPatch.start1 != loc - patchedDelta)
+				appliedPatch = new Patch(patch) { //create a new patch with different applied position if necessary
 					start1 = loc - patchedDelta,
 					start2 = loc
 				};
@@ -179,15 +180,15 @@ namespace DiffPatch
 			patchedDelta += patch.length2 - patch.length1;
 			lastPatchedLine = loc + patch.length2;
 
-			return applied;
+			return appliedPatch;
 		}
 
 		private bool ApplyExact(WorkingPatch patch) {
 			int loc = patch.start2 + searchOffset;
-			if (loc + patch.length1 > textLines.Count)
+			if (loc + patch.length1 > lines.Count)
 				return false;
 
-			if (!patch.ContextLines.SequenceEqual(textLines.GetRange(loc, patch.length1)))
+			if (!patch.ContextLines.SequenceEqual(lines.GetRange(loc, patch.length1)))
 				return false;
 			
 			patch.Succeed(Mode.EXACT, ApplyExactAt(loc, patch));
@@ -198,12 +199,12 @@ namespace DiffPatch
 			if (lmText == null)
 				LinesToChars();
 
-			if (patch.length1 > textLines.Count)
+			if (patch.length1 > lines.Count)
 				return false;
 
 			int loc = patch.start2 + searchOffset;
 			if (loc < 0) loc = 0;
-			else if (loc >= textLines.Count) loc = textLines.Count - 1;
+			else if (loc >= lines.Count) loc = lines.Count - 1;
 
 			int forward = lmText.IndexOf(patch.lmContext, loc, StringComparison.Ordinal);
 			int reverse = lmText.LastIndexOf(patch.lmContext, loc, StringComparison.Ordinal);
@@ -215,7 +216,7 @@ namespace DiffPatch
 
 			int found = reverse < 0 || forward >= 0 && (forward - loc) < (loc - reverse) ? forward : reverse;
 			patch.Succeed(Mode.OFFSET, ApplyExactAt(found, patch));
-			patch.AddOffsetResult(found - loc, textLines.Count);
+			patch.AddOffsetResult(found - loc, lines.Count);
 
 			return true;
 		}
@@ -249,7 +250,7 @@ namespace DiffPatch
 						 Operation.DELETE : Operation.EQUAL;
 
 					for (int l = ploc + 1; l < mloc; l++)
-						diffs.Insert(j++, new Diff(op, textLines[l]));
+						diffs.Insert(j++, new Diff(op, lines[l]));
 				}
 				ploc = mloc;
 
@@ -260,7 +261,7 @@ namespace DiffPatch
 				if (mloc < 0) //unmatched context line
 					diffs.RemoveAt(j);
 				else //update context to match target file (may be the same, doesn't matter)
-					diffs[j++].text = textLines[mloc];
+					diffs[j++].text = lines[mloc];
 			}
 
 			//finish our new patch
@@ -270,7 +271,7 @@ namespace DiffPatch
 
 			int at = match.First(i => i >= 0); //if the patch needs lines trimmed off it, the early match entries will be negative
 			patch.Succeed(Mode.FUZZY, ApplyExactAt(at, fuzzyPatch));
-			patch.AddOffsetResult(fuzzyPatch.start2 - loc, textLines.Count);
+			patch.AddOffsetResult(fuzzyPatch.start2 - loc, lines.Count);
 			patch.AddFuzzyResult(matchQuality);
 			return true;
 		}
@@ -282,16 +283,16 @@ namespace DiffPatch
 			int[] bestMatch = null;
 
 			var mmForward = new MatchMatrix(wmContext, wmLines, MaxMatchOffset);
-			float score = mmForward.Initialize(loc);
+			float score = mmForward.Init(loc);
 			if (score >= bestScore) {
 				bestScore = score;
 				bestMatch = mmForward.Path();
 			}
 
 			var mmReverse = new MatchMatrix(wmContext, wmLines, MaxMatchOffset);
-			mmReverse.Initialize(loc);
+			mmReverse.Init(loc);
 
-			int warnDist = OffsetWarnDistance(wmContext.Count, textLines.Count);
+			int warnDist = OffsetWarnDistance(wmContext.Count, lines.Count);
 			for (int i = 0; mmForward.CanStepForward || mmReverse.CanStepBackward; i++) {
 				//within the warning range it's a straight up fight
 				//past the warning range, quality is reduced by 10% per warning range

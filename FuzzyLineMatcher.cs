@@ -65,7 +65,7 @@ namespace DiffPatch
 				matches[i] = new StraightMatch(pattern.Count);
 		}
 
-		public float Initialize(int loc) {
+		public float Init(int loc) {
 			this.loc = loc;
 
 			for (int i = 0; i <= maxOffset; i++)
@@ -255,7 +255,7 @@ namespace DiffPatch
 				return Enumerable.Range(0, pattern.Count).ToArray();
 
 			var mm = new MatchMatrix(pattern, search, maxOffset);
-			float bestScore = mm.Initialize(-maxOffset);
+			float bestScore = mm.Init(-maxOffset);
 			int[] bestMatch = mm.Path();
 
 			while (mm.CanStepForward) {

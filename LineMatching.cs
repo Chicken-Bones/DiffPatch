@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace DiffPatch
 {
-	public class LineMatching
+	public static class LineMatching
 	{
 		public static IEnumerable<(Range, Range)> UnmatchedRanges(int[] matches, int len2) {
 			int len1 = matches.Length;

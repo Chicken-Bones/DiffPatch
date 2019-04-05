@@ -2,14 +2,14 @@
 
 namespace DiffPatch
 {
-	public class PatienceMatch
+	public sealed class PatienceMatch
 	{
 		//working fields for matching
 		private string chars1;
 		private string chars2;
 		private int[] unique1;
 		private int[] unique2;
-		protected int[] matches;
+		private int[] matches;
 
 		private void Match(int start1, int end1, int start2, int end2) {
 			// step 1: match up identical starting lines
@@ -49,7 +49,7 @@ namespace DiffPatch
 			return matches;
 		}
 
-		private void Init(string chars1, string chars2, int maxChar) {
+		public int[] Match(string chars1, string chars2, int maxChar) {
 			if (unique1 == null || unique1.Length < maxChar) {
 				unique1 = new int[maxChar];
 				unique2 = new int[maxChar];
@@ -59,10 +59,7 @@ namespace DiffPatch
 
 			this.chars1 = chars1;
 			this.chars2 = chars2;
-		}
-
-		public int[] Match(string chars1, string chars2, int maxChar) {
-			Init(chars1, chars2, maxChar);
+			
 			return Match();
 		}
 		
@@ -123,7 +120,7 @@ namespace DiffPatch
 		}
 
 		//https://en.wikipedia.org/wiki/Patience_sorting
-		public static int[] LASIndices(IReadOnlyList<int> sequence) {;
+		public static int[] LASIndices(IReadOnlyList<int> sequence) {
 			if (sequence.Count == 0)
 				return new int[0];
 			

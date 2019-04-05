@@ -15,6 +15,8 @@ namespace DiffPatch
 
 		public List<Patch> patches = new List<Patch>();
 
+		public bool IsEmpty => patches.Count == 0;
+
 		public static PatchFile FromText(string patchText, bool verifyHeaders = true) => 
 			FromLines(patchText.Split('\n').Select(l => l.TrimEnd('\r')), verifyHeaders);
 
@@ -52,7 +54,7 @@ namespace DiffPatch
 						patch = new Patch {
 							start1 = int.Parse(m.Groups[1].Value) - 1,
 							length1 = int.Parse(m.Groups[2].Value),
-							length2 = int.Parse(m.Groups[4].Value),
+							length2 = int.Parse(m.Groups[4].Value)
 						};
 
 						//auto calc applied offset
