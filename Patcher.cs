@@ -107,6 +107,7 @@ namespace DiffPatch
 		private List<string> wmLines;
 
 		public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
+		public float MinMatchScore { get; set; } = FuzzyLineMatcher.DefaultMinMatchScore;
 
 		public Patcher(IEnumerable<Patch> patches, IEnumerable<string> lines, CharRepresenter charRep = null) {
 			this.patches = patches.Select(p => new WorkingPatch(p)).ToList();
@@ -276,10 +277,8 @@ namespace DiffPatch
 			return true;
 		}
 
-		//a match below quality 0.5 is unacceptably bad
-		private const float MinScore = 0.5f;
 		private int[] FindMatch(int loc, IReadOnlyList<string> wmContext, out float bestScore) {
-			bestScore = MinScore;
+			bestScore = MinMatchScore;
 			int[] bestMatch = null;
 
 			var mmForward = new MatchMatrix(wmContext, wmLines, MaxMatchOffset);

@@ -216,11 +216,10 @@ namespace DiffPatch
 
 	public class FuzzyLineMatcher
 	{
-		public int maxOffset;
-
-		public FuzzyLineMatcher(int maxOffset = MatchMatrix.DefaultMaxOffset) {
-			this.maxOffset = maxOffset;
-		}
+		public const float DefaultMinMatchScore = 0.5f;
+		
+		public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
+		public float MinMatchScore { get; set; } = DefaultMinMatchScore;
 
 		public void MatchLinesByWords(int[] matches, IReadOnlyList<string> wmLines1, IReadOnlyList<string> wmLines2) {
 			foreach (var (range1, range2) in LineMatching.UnmatchedRanges(matches, wmLines2.Count)) {
@@ -251,11 +250,8 @@ namespace DiffPatch
 			if (pattern.Count == 0)
 				return new int[0];
 
-			if (pattern.Count == search.Count)
-				return Enumerable.Range(0, pattern.Count).ToArray();
-
-			var mm = new MatchMatrix(pattern, search, maxOffset);
-			float bestScore = mm.Init(-maxOffset);
+			var mm = new MatchMatrix(pattern, search, MaxMatchOffset);
+			float bestScore = mm.Init(-MaxMatchOffset);
 			int[] bestMatch = mm.Path();
 
 			while (mm.CanStepForward) {
@@ -266,8 +262,8 @@ namespace DiffPatch
 				}
 			}
 
-			if (bestScore == 0)
-				return Enumerable.Range(0, pattern.Count).ToArray();
+			if (bestScore < MinMatchScore)
+				return Enumerable.Repeat(-1, pattern.Count).ToArray();
 
 			return bestMatch;
 		}
