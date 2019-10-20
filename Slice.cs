@@ -6,11 +6,11 @@ namespace DiffPatch
 	public class ReadOnlyListSlice<T> : IReadOnlyList<T>
 	{
 		private readonly IReadOnlyList<T> wrapped;
-		private readonly Range range;
+		private readonly LineRange range;
 
 		public int Count => range.length;
 
-		public ReadOnlyListSlice(IReadOnlyList<T> wrapped, Range range) {
+		public ReadOnlyListSlice(IReadOnlyList<T> wrapped, LineRange range) {
 			this.wrapped = wrapped;
 			this.range = range;
 		}
@@ -27,10 +27,10 @@ namespace DiffPatch
 
 	public static class SliceExtension
 	{
-		public static IReadOnlyList<T> Slice<T>(this IReadOnlyList<T> list, Range range) =>
+		public static IReadOnlyList<T> Slice<T>(this IReadOnlyList<T> list, LineRange range) =>
 			new ReadOnlyListSlice<T>(list, range);
 
 		public static IReadOnlyList<T> Slice<T>(this IReadOnlyList<T> list, int start, int len) =>
-			new ReadOnlyListSlice<T>(list, new Range {start = start, length = len});
+			new ReadOnlyListSlice<T>(list, new LineRange {start = start, length = len});
 	}
 }

@@ -5,7 +5,7 @@ namespace DiffPatch
 {
 	public static class LineMatching
 	{
-		public static IEnumerable<(Range, Range)> UnmatchedRanges(int[] matches, int len2) {
+		public static IEnumerable<(LineRange, LineRange)> UnmatchedRanges(int[] matches, int len2) {
 			int len1 = matches.Length;
 			int start1 = 0, start2 = 0;
 			do {
@@ -16,7 +16,7 @@ namespace DiffPatch
 
 				int end2 = end1 == len1 ? len2 : matches[end1];
 				if (end1 != start1 || end2 != start2) {
-					yield return (new Range { start = start1, end = end1 }, new Range { start = start2, end = end2 });
+					yield return (new LineRange { start = start1, end = end1 }, new LineRange { start = start2, end = end2 });
 					start1 = end1;
 					start2 = end2;
 				} else {//matchpoint follows on from start, no unmatched lines
@@ -26,7 +26,7 @@ namespace DiffPatch
 			} while (start1 < len1 || start2 < len2);
 		}
 
-		public static int[] FromUnmatchedRanges(IEnumerable<(Range, Range)> unmatchedRanges, int len1) {
+		public static int[] FromUnmatchedRanges(IEnumerable<(LineRange, LineRange)> unmatchedRanges, int len1) {
 			int[] matches = new int[len1];
 			int start1 = 0, start2 = 0;
 			foreach (var (range1, range2) in unmatchedRanges) {
@@ -48,7 +48,7 @@ namespace DiffPatch
 			return matches;
 		}
 
-		public static IEnumerable<(Range, Range)> UnmatchedRanges(IEnumerable<Patch> patches) {
+		public static IEnumerable<(LineRange, LineRange)> UnmatchedRanges(IEnumerable<Patch> patches) {
 			foreach (var patch in patches) {
 				var diffs = patch.diffs;
 				int start1 = patch.start1, start2 = patch.start2;
@@ -69,7 +69,7 @@ namespace DiffPatch
 					}
 
 					if (end1 != start1 || end2 != start2)
-						yield return (new Range { start = start1, end = end1 }, new Range { start = start2, end = end2 });
+						yield return (new LineRange { start = start1, end = end1 }, new LineRange { start = start2, end = end2 });
 
 					start1 = end1;
 					start2 = end2;

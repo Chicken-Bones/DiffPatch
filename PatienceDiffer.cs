@@ -9,12 +9,9 @@ namespace DiffPatch
 
 		public PatienceDiffer(CharRepresenter charRep = null) : base(charRep) { }
 
-		public PatienceDiffer(IReadOnlyList<string> lines1, IReadOnlyList<string> lines2, CharRepresenter charRep = null) : 
-			base(lines1, lines2, charRep) { }
-
-		public override int[] Match() {
-			LineModeString1 = charRep.LinesToChars(Lines1);
-			LineModeString2 = charRep.LinesToChars(Lines2);
+		public override int[] Match(IReadOnlyList<string> lines1, IReadOnlyList<string> lines2) {
+			LineModeString1 = charRep.LinesToChars(lines1);
+			LineModeString2 = charRep.LinesToChars(lines2);
 			return new PatienceMatch().Match(LineModeString1, LineModeString2, charRep.MaxLineChar);
 		}
 	}

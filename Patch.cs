@@ -29,8 +29,8 @@ namespace DiffPatch
 
 		public IEnumerable<string> ContextLines => diffs.Where(d => d.op != Operation.INSERT).Select(d => d.text);
 		public IEnumerable<string> PatchedLines => diffs.Where(d => d.op != Operation.DELETE).Select(d => d.text);
-		public Range Range1 => new Range {start = start1, length = length1};
-		public Range Range2 => new Range {start = start2, length = length2};
+		public LineRange Range1 => new LineRange {start = start1, length = length1};
+		public LineRange Range2 => new LineRange {start = start2, length = length2};
 
 		public void RecalculateLength() {
 			length1 = diffs.Count;
@@ -79,7 +79,7 @@ namespace DiffPatch
 			if (diffs.Count == 0)
 				return new List<Patch>();
 
-			var ranges = new List<Range>();
+			var ranges = new List<LineRange>();
 			int start = 0;
 			int n = 0;
 			for (int i = 0; i < diffs.Count; i++) {
@@ -89,14 +89,14 @@ namespace DiffPatch
 				}
 
 				if (n > numContextLines * 2) {
-					ranges.Add(new Range {start = start, end = i - n + numContextLines});
+					ranges.Add(new LineRange {start = start, end = i - n + numContextLines});
 					start = i - numContextLines;
 				}
 
 				n = 0;
 			}
 
-			ranges.Add(new Range {start = start, end = diffs.Count});
+			ranges.Add(new LineRange {start = start, end = diffs.Count});
 
 			var patches = new List<Patch>(ranges.Count);
 			int end1 = start1, end2 = start2;
