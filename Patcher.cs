@@ -208,7 +208,7 @@ namespace DiffPatch
 			else if (loc >= lines.Count) loc = lines.Count - 1;
 
 			int forward = lmText.IndexOf(patch.lmContext, loc, StringComparison.Ordinal);
-			int reverse = lmText.LastIndexOf(patch.lmContext, loc, StringComparison.Ordinal);
+			int reverse = lmText.LastIndexOf(patch.lmContext, Math.Min(loc+patch.lmContext.Length, lines.Count-1), StringComparison.Ordinal);
 			if (reverse < lastPatchedLine)
 				reverse = -1;
 
