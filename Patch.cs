@@ -75,6 +75,26 @@ namespace DiffPatch
 			}
 		}
 
+		public void Uncollate() {
+			var uncollatedDiffs = new List<Diff>(diffs.Count);
+			var addDiffs = new List<Diff>();
+			foreach (var d in diffs) {
+				if (d.op == Operation.DELETE) {
+					uncollatedDiffs.Add(d);
+				}
+				else if (d.op == Operation.INSERT) {
+					addDiffs.Add(d);
+				}
+				else {
+					uncollatedDiffs.AddRange(addDiffs);
+					addDiffs.Clear();
+					uncollatedDiffs.Add(d);
+				}
+			}
+			uncollatedDiffs.AddRange(addDiffs); //patches may not end with context diffs
+			diffs = uncollatedDiffs;
+		}
+
 		public List<Patch> Split(int numContextLines) {
 			if (diffs.Count == 0)
 				return new List<Patch>();
@@ -117,6 +137,7 @@ namespace DiffPatch
 
 			return patches;
 		}
+
 
 		public void Combine(Patch patch2, IReadOnlyList<string> lines1) {
 			if (Range1.Intersects(patch2.Range1) || Range2.Intersects(patch2.Range2))
