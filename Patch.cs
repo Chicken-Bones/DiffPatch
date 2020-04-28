@@ -32,6 +32,24 @@ namespace DiffPatch
 		public LineRange Range1 => new LineRange {start = start1, length = length1};
 		public LineRange Range2 => new LineRange {start = start2, length = length2};
 
+		public LineRange TrimmedRange1 => TrimRange(Range1);
+		public LineRange TrimmedRange2 => TrimRange(Range2);
+
+		private LineRange TrimRange(LineRange range) {
+			int start = 0;
+			while (start < diffs.Count && diffs[start].op == Operation.EQUAL)
+				start++;
+
+			if (start == diffs.Count)
+				return new LineRange { start = range.start, length = 0};
+
+			int end = diffs.Count;
+			while (end > start && diffs[end - 1].op == Operation.EQUAL)
+				end--;
+
+			return new LineRange { start = range.start + start, end = range.end - (diffs.Count - end)};
+		}
+
 		public void RecalculateLength() {
 			length1 = diffs.Count;
 			length2 = diffs.Count;
@@ -44,34 +62,28 @@ namespace DiffPatch
 									string.Join(Environment.NewLine, diffs);
 
 		public void Trim(int numContextLines) {
-			int start = 0;
-			while (start < diffs.Count && diffs[start].op == Operation.EQUAL)
-				start++;
+			var r = TrimRange(new LineRange{ start = 0, length = diffs.Count });
 
-			if (start == diffs.Count) {
+			if (r.length == 0) {
 				length1 = length2 = 0;
 				diffs.Clear();
 				return;
 			}
 
-			int extra = start - numContextLines;
-			if (extra > 0) {
-				diffs.RemoveRange(0, extra);
-				start1 += extra;
-				start2 += extra;
-				length1 -= extra;
-				length2 -= extra;
+			int trimStart = r.start - numContextLines;
+			int trimEnd = diffs.Count - r.end - numContextLines;
+			if (trimStart > 0) {
+				diffs.RemoveRange(0, trimStart);
+				start1 += trimStart;
+				start2 += trimStart;
+				length1 -= trimStart;
+				length2 -= trimStart;
 			}
 
-			int end = diffs.Count;
-			while (diffs[end-1].op == Operation.EQUAL)
-				end--;
-
-			extra = diffs.Count - end - numContextLines;
-			if (extra > 0) {
-				diffs.RemoveRange(diffs.Count-extra, extra);
-				length1 -= extra;
-				length2 -= extra;
+			if (trimEnd > 0) {
+				diffs.RemoveRange(diffs.Count - trimEnd, trimEnd);
+				length1 -= trimEnd;
+				length2 -= trimEnd;
 			}
 		}
 

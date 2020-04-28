@@ -27,7 +27,8 @@ namespace DiffPatch
 
 	public static class SliceExtension
 	{
-		public static IReadOnlyList<T> Slice<T>(this IReadOnlyList<T> list, LineRange range) =>
+		public static IReadOnlyList<T> Slice<T>(this IReadOnlyList<T> list, LineRange range) => 
+			range.start == 0 && range.length == list.Count ? list :
 			new ReadOnlyListSlice<T>(list, range);
 
 		public static IReadOnlyList<T> Slice<T>(this IReadOnlyList<T> list, int start, int len) =>

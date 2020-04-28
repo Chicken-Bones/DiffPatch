@@ -23,18 +23,28 @@ namespace DiffPatch
 		//contains match entries for consecutive characters of a pattern and the search text starting at line offset loc
 		private class StraightMatch
 		{
+			private readonly int patternLength;
+			private readonly IReadOnlyList<string> pattern;
+			private readonly IReadOnlyList<string> search;
+			private readonly LineRange range;
+
 			public readonly MatchNodes[] nodes;
 
-			public StraightMatch(int patternLength) {
+			public StraightMatch(IReadOnlyList<string> pattern, IReadOnlyList<string> search, LineRange range) {
+				patternLength = pattern.Count;
+				this.pattern = pattern;
+				this.search = search;
+				this.range = range;
+
 				nodes = new MatchNodes[patternLength];
 				for (int i = 0; i < patternLength; i++)
 					nodes[i] = new MatchNodes();
 			}
 
-			public void Update(int loc, IReadOnlyList<string> pattern, IReadOnlyList<string> search) {
-				for (int i = 0; i < pattern.Count; i++) {
+			public void Update(int loc) {
+				for (int i = 0; i < patternLength; i++) {
 					int l = i + loc;
-					if (l < 0 || l >= search.Count)
+					if (l < range.start || l >= range.end)
 						nodes[i].score = 0;
 					else
 						nodes[i].score = FuzzyLineMatcher.MatchLines(pattern[i], search[l]);
@@ -42,71 +52,78 @@ namespace DiffPatch
 			}
 		}
 
-		private readonly IReadOnlyList<string> pattern;
-		private readonly IReadOnlyList<string> search;
+		private readonly int patternLength;
+		private readonly LineRange range;
 		//maximum offset between line matches in a run
 		private readonly int maxOffset;
 
-		//center line offset for this match matrix
-		private int loc;
+		public LineRange WorkingRange { get; }
+
+		// location of first pattern line in search lines. Starting offset for a match
+		private int pos = int.MinValue;
 		//consecutive matches for pattern offset from loc by up to maxOffset
 		//first entry is for pattern starting at loc in text, last entry is offset +maxOffset
 		private readonly StraightMatch[] matches;
 		//offset index of first node in best path
 		private int firstNode;
 
-		public MatchMatrix(IReadOnlyList<string> pattern, IReadOnlyList<string> search, int maxOffset = DefaultMaxOffset) {
-			this.pattern = pattern;
-			this.search = search;
+		public MatchMatrix(IReadOnlyList<string> pattern, IReadOnlyList<string> search, int maxOffset = DefaultMaxOffset, LineRange range = default) {
+			if (range == default)
+				range = new LineRange { length = search.Count };
+
+			patternLength = pattern.Count;
+			this.range = range;
 			this.maxOffset = maxOffset;
+			WorkingRange = new LineRange { first = range.start - maxOffset, last = range.end - patternLength };
 
 			matches = new StraightMatch[maxOffset + 1];
 			for (int i = 0; i <= maxOffset; i++)
-				matches[i] = new StraightMatch(pattern.Count);
+				matches[i] = new StraightMatch(pattern, search, range);
 		}
 
-		public float Init(int loc) {
-			this.loc = loc;
+		public bool Match(int loc, out float score) {
+			score = 0;
+			if (!WorkingRange.Contains(loc))
+				return false;
+
+			if (loc == pos+1)
+				StepForward();
+			else if (loc == pos-1)
+				StepBackward();
+			else
+				Init(loc);
+
+			score = Recalculate();
+			return true;
+		}
+
+		private void Init(int loc) {
+			pos = loc;
 
 			for (int i = 0; i <= maxOffset; i++)
-				matches[i].Update(loc + i, pattern, search);
-
-			return Recalculate();
+				matches[i].Update(loc + i);
 		}
 
-		public bool CanStepForward => loc < search.Count - pattern.Count + maxOffset;
-		public bool CanStepBackward => loc > -maxOffset;
-
-		public float StepForward() {
-			if (!CanStepForward)
-				return 0;
-
-			loc++;
+		private void StepForward() {
+			pos++;
 
 			var reuse = matches[0];
 			for (int i = 1; i <= maxOffset; i++)
 				matches[i - 1] = matches[i];
 
 			matches[maxOffset] = reuse;
-			reuse.Update(loc + maxOffset, pattern, search);
-
-			return Recalculate();
+			reuse.Update(pos + maxOffset);
 		}
 
-		public float StepBackward() {
-			if (!CanStepBackward)
-				return 0;
-
-			loc--;
+		private void StepBackward() {
+			pos--;
 
 			var reuse = matches[maxOffset];
 			for (int i = maxOffset; i > 0; i--)
 				matches[i] = matches[i - 1];
 
 			matches[0] = reuse;
-			reuse.Update(loc, pattern, search);
-
-			return Recalculate();
+			reuse.Update(pos);
 		}
 
 		//calculates the best path through the match matrix
@@ -114,13 +131,13 @@ namespace DiffPatch
 		private float Recalculate() {
 			//tail nodes have sum = score
 			for (int j = 0; j <= maxOffset; j++) {
-				var node = matches[j].nodes[pattern.Count - 1];
+				var node = matches[j].nodes[patternLength - 1];
 				node.sum = node.score;
 				node.next = -1;//no next
 			}
 
 			//calculate best paths for all nodes excluding head
-			for (int i = pattern.Count - 2; i >= 0; i--)
+			for (int i = patternLength - 2; i >= 0; i--)
 				for (int j = 0; j <= maxOffset; j++) {
 					//for each node
 					var node = matches[j].nodes[i];
@@ -128,7 +145,7 @@ namespace DiffPatch
 					float maxsum = 0;
 					for (int k = 0; k <= maxOffset; k++) {
 						int l = i + OffsetsToPatternDistance(j, k);
-						if (l >= pattern.Count) continue;
+						if (l >= patternLength) continue;
 
 						float sum = matches[k].nodes[l].sum;
 						if (k > j) sum -= 0.5f * (k - j); //penalty for skipping lines in search text
@@ -157,19 +174,21 @@ namespace DiffPatch
 			}
 
 			//return best path value
-			return matches[firstNode].nodes[0].sum / pattern.Count;
+			return matches[firstNode].nodes[0].sum / patternLength;
 		}
+
+		private int LocInRange(int loc) => range.Contains(loc) ? loc : -1;
 
 		/// <summary>
 		/// Get the path of the current best match
 		/// </summary>
 		/// <returns>An array of corresponding line numbers in search text for each line in pattern</returns>
 		public int[] Path() {
-			var path = new int[pattern.Count];
+			var path = new int[patternLength];
 
 			int offset = firstNode; //offset of current node
 			var node = matches[firstNode].nodes[0];
-			path[0] = loc + offset;
+			path[0] = LocInRange(pos + offset);
 
 			int i = 0; //index in pattern of current node
 			while (node.next >= 0) {
@@ -179,7 +198,7 @@ namespace DiffPatch
 
 				offset = node.next;
 				node = matches[offset].nodes[++i];
-				path[i] = loc + i + offset;
+				path[i] = LocInRange(pos + i + offset);
 			}
 
 			while (++i < path.Length)//trailing lines with no match
@@ -194,8 +213,8 @@ namespace DiffPatch
 			for (int j = 0; j <= maxOffset; j++) {
 				sb.Append(j).Append(':');
 				var line = matches[j];
-				for (int i = 0; i < pattern.Count; i++) {
-					bool inPath = path[i] > 0 && path[i] == loc + i + j;
+				for (int i = 0; i < patternLength; i++) {
+					bool inPath = path[i] > 0 && path[i] == pos + i + j;
 					sb.Append(inPath ? '[' : ' ');
 					int score = (int)Math.Round(line.nodes[i].score * 100);
 					sb.Append(score == 100 ? "%%" : score.ToString("D2"));
@@ -250,19 +269,18 @@ namespace DiffPatch
 			if (pattern.Count == 0)
 				return new int[0];
 
-			var mm = new MatchMatrix(pattern, search, MaxMatchOffset);
-			float bestScore = mm.Init(-MaxMatchOffset);
-			int[] bestMatch = mm.Path();
+			float bestScore = MinMatchScore;
+			int[] bestMatch = null;
 
-			while (mm.CanStepForward) {
-				float score = mm.StepForward();
+			var mm = new MatchMatrix(pattern, search, MaxMatchOffset);
+			for(int i = mm.WorkingRange.first; mm.Match(i, out float score); i++) {
 				if (score > bestScore) {
 					bestScore = score;
 					bestMatch = mm.Path();
 				}
 			}
 
-			if (bestScore < MinMatchScore)
+			if (bestMatch == null)
 				return Enumerable.Repeat(-1, pattern.Count).ToArray();
 
 			return bestMatch;
