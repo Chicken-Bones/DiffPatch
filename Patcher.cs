@@ -91,6 +91,13 @@ namespace DiffPatch
 			}
 		}
 
+		public class FuzzyMatchOptions
+		{
+			public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
+			public float MinMatchScore { get; set; } = FuzzyLineMatcher.DefaultMinMatchScore;
+			public bool EnableDistancePenalty { get; set; } = true;
+		}
+
 		//the offset distance which constitutes a warning for a patch
 		//currently either 10% of file length, or 10x patch length, whichever is longer
 		public static int OffsetWarnDistance(int patchLength, int fileLength) => Math.Max(patchLength * 10, fileLength / 10);
@@ -115,8 +122,7 @@ namespace DiffPatch
 		private string lmText;
 		private List<string> wmLines;
 
-		public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
-		public float MinMatchScore { get; set; } = FuzzyLineMatcher.DefaultMinMatchScore;
+		public FuzzyMatchOptions FuzzyOptions { get; set; } = new FuzzyMatchOptions();
 
 		public Patcher(IEnumerable<Patch> patches, IEnumerable<string> lines, CharRepresenter charRep = null) {
 			this.patches = patches.Select(p => new WorkingPatch(p)).ToList();
@@ -320,24 +326,26 @@ namespace DiffPatch
 			// parts of file to search in
 			var ranges = new LineRange { length = wmLines.Count }.Except(keepoutRanges).ToArray();
 
-			return FuzzyMatch(wmContext, wmLines, loc, MaxMatchOffset, MinMatchScore, ranges);
+			return FuzzyMatch(wmContext, wmLines, loc, FuzzyOptions, ranges);
 		}
 		
-		public static (int[] match, float score) FuzzyMatch(IReadOnlyList<string> wmPattern, IReadOnlyList<string> wmText, int loc, int maxMatchOffset = MatchMatrix.DefaultMaxOffset, float minMatchScore = FuzzyLineMatcher.DefaultMinMatchScore, LineRange[] ranges = default) {
+		public static (int[] match, float score) FuzzyMatch(IReadOnlyList<string> wmPattern, IReadOnlyList<string> wmText, int loc, FuzzyMatchOptions options = default, LineRange[] ranges = default) {
 			if (ranges == null)
 				ranges = new LineRange[] { new LineRange { length = wmText.Count } };
 
+			options ??= new();
+
 			// we're creating twice as many MatchMatrix objects as we need, incurring some wasted allocation and setup time, but it reads easier than trying to precompute all the edge cases
-			var fwdMatchers = ranges.Select(r => new MatchMatrix(wmPattern, wmText, maxMatchOffset, r)).SkipWhile(m => loc > m.WorkingRange.last).ToArray();
-			var revMatchers = ranges.Reverse().Select(r => new MatchMatrix(wmPattern, wmText, maxMatchOffset, r)).SkipWhile(m => loc < m.WorkingRange.first).ToArray();
+			var fwdMatchers = ranges.Select(r => new MatchMatrix(wmPattern, wmText, options.MaxMatchOffset, r)).SkipWhile(m => loc > m.WorkingRange.last).ToArray();
+			var revMatchers = ranges.Reverse().Select(r => new MatchMatrix(wmPattern, wmText, options.MaxMatchOffset, r)).SkipWhile(m => loc < m.WorkingRange.first).ToArray();
 
 			int warnDist = OffsetWarnDistance(wmPattern.Count, wmText.Count);
-			float penaltyPerLine = 1f / (10*warnDist);
+			float penaltyPerLine = options.EnableDistancePenalty ? 1f / (10*warnDist) : 0;
 
 			var fwd = new MatchRunner(loc, 1, fwdMatchers, penaltyPerLine);
 			var rev = new MatchRunner(loc,-1, revMatchers, penaltyPerLine);
 
-			float bestScore = minMatchScore;
+			float bestScore = options.MinMatchScore;
 			int[] bestMatch = null;
 			while (fwd.Step(ref bestScore, ref bestMatch) | rev.Step(ref bestScore, ref bestMatch));
 

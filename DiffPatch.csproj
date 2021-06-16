@@ -2,5 +2,6 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Description>Diff and Patch for .NET</Description>
+	<LangVersion>latest</LangVersion>
   </PropertyGroup>
 </Project>
