@@ -4,8 +4,8 @@ using System.Linq;
 
 namespace DiffPatch
 {
-	public struct LineRange
-	{
+	public struct LineRange : IEquatable<LineRange>
+    {
 		public int start, end;
 
 		public int length {
@@ -62,5 +62,11 @@ namespace DiffPatch
 			if (this.end - start > 0)
 				yield return new LineRange { start = start, end = this.end };
 		}
+
+        public override bool Equals(object obj) => obj is LineRange range && Equals(range);
+
+		public bool Equals(LineRange other) => this == other;
+
+        public override int GetHashCode() => end*end + start; // elegant pairing function, seems appropriate, probably reduces hash collisions when truncating hash
 	}
 }
