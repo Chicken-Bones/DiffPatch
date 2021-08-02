@@ -58,8 +58,8 @@ namespace DiffPatch
 				else if (d.op == Operation.INSERT) length1--;
 		}
 
-		public override string ToString() => Header + Environment.NewLine +
-									string.Join(Environment.NewLine, diffs);
+		public override string ToString() => 
+			string.Join(Environment.NewLine, diffs.Select(d => d.ToString()).Prepend(Header));
 
 		public void Trim(int numContextLines) {
 			var r = TrimRange(new LineRange{ start = 0, length = diffs.Count });
