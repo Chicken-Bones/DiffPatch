@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 
-namespace DiffPatch
+namespace CodeChicken.DiffPatch
 {
 	public class ReadOnlyListSlice<T> : IReadOnlyList<T>
 	{

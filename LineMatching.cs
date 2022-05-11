@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DiffPatch
+namespace CodeChicken.DiffPatch
 {
 	public static class LineMatching
 	{

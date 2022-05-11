@@ -2,6 +2,19 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <Description>Diff and Patch for .NET</Description>
-	<LangVersion>latest</LangVersion>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>CodeChicken.DiffPatch</AssemblyName>
+    <Version>1.0.0</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Chicken-Bones</Authors>
+    <PackageProjectUrl>https://github.com/Chicken-Bones/DiffPatch</PackageProjectUrl>
+    <PackageTags>diff patch</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
+  <ItemGroup>
+    <None Include="LICENSE">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
 </Project>

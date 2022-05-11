@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace DiffPatch
+namespace CodeChicken.DiffPatch
 {
 	public class PatchFile
 	{

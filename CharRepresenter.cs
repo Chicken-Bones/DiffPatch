@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DiffPatch
+namespace CodeChicken.DiffPatch
 {
 	public class CharRepresenter
 	{

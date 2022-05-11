@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace DiffPatch
+namespace CodeChicken.DiffPatch
 {
 	public class PatienceDiffer : Differ
 	{

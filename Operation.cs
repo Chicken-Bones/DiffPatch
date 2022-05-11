@@ -1,4 +1,4 @@
-﻿namespace DiffPatch
+﻿namespace CodeChicken.DiffPatch
 {
 	public enum Operation
 	{

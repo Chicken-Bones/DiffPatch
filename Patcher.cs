@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 
-namespace DiffPatch
+namespace CodeChicken.DiffPatch
 {
 	public class Patcher
 	{
