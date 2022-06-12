@@ -58,7 +58,7 @@ namespace CodeChicken.DiffPatch
 				else if (c == ' ' || c == '\t') while (i + len < line.Length && line[i + len] == c) len++;
 				string word = line.Substring(i, len);
 
-				if (b > buf.Length) Array.Resize(ref buf, buf.Length * 2);
+				if (b >= buf.Length) Array.Resize(ref buf, buf.Length * 2);
 				buf[b++] = AddWord(word);
 			}
 
