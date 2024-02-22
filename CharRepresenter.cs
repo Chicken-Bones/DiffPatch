@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -48,7 +48,7 @@ namespace CodeChicken.DiffPatch
 		private char[] buf = new char[4096];
 		public virtual string WordsToChars(string line) {
 			int b = 0;
-
+#if NETSTANDARD2_0
 			for (int i = 0, len; i < line.Length; i += len) {
 				char c = line[i];
 				//identify word
@@ -57,13 +57,32 @@ namespace CodeChicken.DiffPatch
 				else if (char.IsDigit(c)) while (i + len < line.Length && char.IsDigit(line, i + len)) len++;
 				else if (c == ' ' || c == '\t') while (i + len < line.Length && line[i + len] == c) len++;
 				string word = line.Substring(i, len);
-
+#else
+			foreach (var r in EnumerateWords(line)) {
+				string word = line[r];
+#endif
 				if (b >= buf.Length) Array.Resize(ref buf, buf.Length * 2);
 				buf[b++] = AddWord(word);
 			}
 
 			return new string(buf, 0, b);
 		}
+
+#if !NETSTANDARD2_0
+		public virtual IEnumerable<Range> EnumerateWords(string line)
+		{
+			for (int i = 0; i < line.Length;) {
+				int start = i;
+				char c = line[i++];
+
+				//identify word
+				if (char.IsLetter(c)) while (i < line.Length && char.IsLetterOrDigit(line, i)) i++;
+				else if (char.IsDigit(c)) while (i < line.Length && char.IsDigit(line, i)) i++;
+				else if (c == ' ' || c == '\t') while (i < line.Length && line[i] == c) i++;
+				yield return new Range(start, i);
+			}
+		}
+#endif
 
 		public string LinesToChars(IEnumerable<string> lines) => new string(lines.Select(AddLine).ToArray());
 

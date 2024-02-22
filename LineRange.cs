@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -68,5 +68,9 @@ namespace CodeChicken.DiffPatch
 		public bool Equals(LineRange other) => this == other;
 
         public override int GetHashCode() => end*end + start; // elegant pairing function, seems appropriate, probably reduces hash collisions when truncating hash
+
+#if !NETSTANDARD2_0
+		public static implicit operator Range(LineRange r) => new Range(Index.FromStart(r.start), Index.FromStart(r.end));
+#endif
 	}
 }
