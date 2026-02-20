@@ -58,8 +58,8 @@ namespace CodeChicken.DiffPatch
 
 			public int? AppliedDelta => result?.appliedPatch?.length2 - result?.appliedPatch?.length1;
 
-			public void Fail() {
-				result = new Result {patch = this, success = false};
+			public void Fail(int searchOffset) {
+				result = new Result {patch = this, success = false, searchOffset = searchOffset};
 			}
 
 			public void Succeed(Mode mode, Patch appliedPatch) {
@@ -104,19 +104,7 @@ namespace CodeChicken.DiffPatch
 
 		private readonly IReadOnlyList<WorkingPatch> patches;
 		private List<string> lines;
-		private bool applied;
 
-		// Last here means highest line number, not necessarily most recent.
-		// Patches can only apply before lastAppliedPatch in fuzzy mode
-		private Patch lastAppliedPatch = null;
-
-		// we maintain delta as the offset of the last patch (applied location - expected location)
-		// this way if a line is inserted, and all patches are offset by 1, only the first patch is reported as offset
-		// normally this is equivalent to `lastAppliedPatch?.AppliedOffset` but if a patch fails, we subtract its length delta from the search offset
-		private int searchOffset;
-
-		// patches applying within this range (due to fuzzy matching) will cause patch reordering
-		private LineRange ModifiedRange => new LineRange { start = 0, end = lastAppliedPatch?.TrimmedRange2.end ?? 0 };
 
 		private readonly CharRepresenter charRep;
 		private string lmText;
@@ -131,22 +119,23 @@ namespace CodeChicken.DiffPatch
 		}
 
 		public void Patch(Mode mode) {
-			if (applied)
-				throw new Exception("Already Applied");
-
-			applied = true;
+			// searchOffset is the offset of the last patch (applied location - expected location)
+			// this way if a line is inserted, and all patches are offset by 1, only the first patch is reported as offset
+			// normally this is equivalent to `lastAppliedPatch?.AppliedOffset` but if a patch fails, we subtract its length delta from the search offset
+			int searchOffset = 0;
 
 			foreach (var patch in patches) {
-				if (ApplyExact(patch))
-					continue;
-				if (mode >= Mode.OFFSET && ApplyOffset(patch))
-					continue;
-				if (mode >= Mode.FUZZY && ApplyFuzzy(patch))
-					continue;
+				if (patch.result is { success: true }
+					|| ApplyExact(patch, searchOffset)
+					|| mode >= Mode.OFFSET && ApplyOffset(patch, searchOffset)
+					|| mode >= Mode.FUZZY && ApplyFuzzy(patch, searchOffset)) {
 
-				patch.Fail();
-				patch.result.searchOffset = searchOffset;
-				searchOffset -= patch.length2 - patch.length1;
+					searchOffset = patch.result.appliedPatch.start2 - patch.start2;
+				}
+				else {
+					patch.Fail(searchOffset);
+					searchOffset -= patch.length2 - patch.length1;
+				}
 			}
 		}
 
@@ -198,39 +187,30 @@ namespace CodeChicken.DiffPatch
 			
 			// update the applied location for patches following this one in the file, but preceding it in the patch list
 			// can only happen if fuzzy matching causes a patch to move before one of the previously applied patches
-			if (loc < ModifiedRange.end) {
-				foreach (var p in patches.Where(p => p.KeepoutRange2?.start > loc))
-					p.result.appliedPatch.start2 += appliedPatch.length2 - appliedPatch.length1;
-			}
-			else {
-				lastAppliedPatch = appliedPatch;
-			}
+			foreach (var p in patches.Where(p => p.KeepoutRange2?.start > loc))
+				p.result.appliedPatch.start2 += appliedPatch.length2 - appliedPatch.length1;
 
-			searchOffset = appliedPatch.start2 - patch.start2;
 			return appliedPatch;
 		}
 
 		private bool CanApplySafelyAt(int loc, Patch patch) {
-			if (loc >= ModifiedRange.end)
-				return true;
-
 			var range = new LineRange { start = loc, length = patch.length1 };
 			return patches.All(p => !p.KeepoutRange2?.Contains(range) ?? true);
 		}
 
-		private bool ApplyExact(WorkingPatch patch) {
+		private bool ApplyExact(WorkingPatch patch, int searchOffset) {
 			int loc = patch.start2 + searchOffset;
 			if (loc + patch.length1 > lines.Count)
 				return false;
 
 			if (!patch.ContextLines.SequenceEqual(lines.GetRange(loc, patch.length1)))
 				return false;
-			
+
 			patch.Succeed(Mode.EXACT, ApplyExactAt(loc, patch));
 			return true;
 		}
 
-		private bool ApplyOffset(WorkingPatch patch) {
+		private bool ApplyOffset(WorkingPatch patch, int searchOffset) {
 			if (lmText == null)
 				LinesToChars();
 
@@ -259,7 +239,7 @@ namespace CodeChicken.DiffPatch
 			return true;
 		}
 
-		private bool ApplyFuzzy(WorkingPatch patch) {
+		private bool ApplyFuzzy(WorkingPatch patch, int searchOffset) {
 			if (wmLines == null)
 				WordsToChars();
 
