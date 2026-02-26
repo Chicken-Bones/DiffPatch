@@ -85,10 +85,10 @@ namespace CodeChicken.DiffPatch
 			
 			if (verifyHeaders) {
 				foreach (var p in patchFile.patches) {
-					if (p.length1 != p.ContextLines.Count())
-						throw new ArgumentException($"Context length doesn't match contents: {p.Header}");
-					if (p.length2 != p.PatchedLines.Count())
-						throw new ArgumentException($"Patched length doesn't match contents: {p.Header}");
+					if (p.ContextLines.Count() is int cLen && p.length1 != cLen)
+						throw new ArgumentException($"Context length ({cLen}) doesn't match header: {p.Header}");
+					if (p.PatchedLines.Count() is int pLen && p.length2 != pLen)
+						throw new ArgumentException($"Patched length ({pLen}) doesn't match header: {p.Header}");
 				}
 			}
 
