@@ -10,11 +10,16 @@
     <PackageProjectUrl>https://github.com/Chicken-Bones/DiffPatch</PackageProjectUrl>
     <PackageTags>diff patch</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="LICENSE">
+    <None Include="../LICENSE">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+		<None Include="README.md">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
   </ItemGroup>
 </Project>
