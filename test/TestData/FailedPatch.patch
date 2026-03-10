@@ -1,0 +1,12 @@
+@@ -1,7 +1,7 @@
+ namespace TestData;
+
+ public class Unrelated
+ {
+-	public string Foo = "bar";
+-	public string Baz = "qux";
+-	public string Quux = "corge";
++	public string Foo = "BAR";
++	public string Baz = "QUX";
++	public string Quux = "CORGE";
+ }

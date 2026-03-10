@@ -1,0 +1,12 @@
+@@ -7,6 +_,11 @@
+ 		return a + b;
+ 	}
+ 
++	public int Subtract(int a, int b)
++	{
++		return a - b;
++	}
++
+ 	public int Multiply(int a, int b)
+ 	{
+ 		return a * b;

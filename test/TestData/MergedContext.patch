@@ -1,0 +1,15 @@
+@@ -5,10 +5,12 @@
+ 	public int Add(int a, int b)
+ 	{
+-		return a + b;
++		var result = a + b;
++		return result;
+ 	}
+ 
+ 	public int Multiply(int a, int b)
+ 	{
+-		return a * b;
++		var result = a * b;
++		return result;
+ 	}
+ }

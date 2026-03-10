@@ -1,0 +1,12 @@
+@@ -6,3 +6,4 @@
+ 	{
+-		return a + b;
++		var result = a + b;
++		return result;
+ 	}
+@@ -11,3 +12,4 @@
+ 	{
+-		return a * b;
++		var result = a * b;
++		return result;
+ 	}
