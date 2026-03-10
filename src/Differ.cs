@@ -17,25 +17,23 @@ namespace CodeChicken.DiffPatch
 
 		public List<Diff> Diff(IReadOnlyList<string> lines1, IReadOnlyList<string> lines2) => LineMatching.MakeDiffList(Match(lines1, lines2), lines1, lines2);
 
-		public List<Patch> MakePatches(IReadOnlyList<string> lines1, IReadOnlyList<string> lines2, int numContextLines = DefaultContext, bool collate = true) => MakePatches(Diff(lines1, lines2), numContextLines, collate);
+		public List<Patch> MakePatches(IReadOnlyList<string> lines1, IReadOnlyList<string> lines2, int numContextLines = DefaultContext) => MakePatches(Diff(lines1, lines2), numContextLines);
 
-		public static List<Patch> MakePatches(List<Diff> diffs, int numContextLines = DefaultContext, bool collate = true) {
+		public static List<Patch> MakePatches(List<Diff> diffs, int numContextLines = DefaultContext) {
 			var p = new Patch { diffs = diffs };
 			p.RecalculateLength();
 			p.Trim(numContextLines);
 			if (p.length1 == 0)
 				return new List<Patch>();
-			if (!collate)
-				p.Uncollate();
 
 			return p.Split(numContextLines);
 		}
 
-		public static PatchFile DiffFiles(Differ differ, string path1, string path2, string rootDir = null, int numContextLines = DefaultContext, bool collate = true) {
+		public static PatchFile DiffFiles(Differ differ, string path1, string path2, string rootDir = null, int numContextLines = DefaultContext) {
 			return new PatchFile {
 				basePath = path1,
 				patchedPath = path2,
-				patches = differ.MakePatches(File.ReadAllLines(Path.Combine(rootDir ?? "", path1)), File.ReadAllLines(Path.Combine(rootDir ?? "", path2)), numContextLines, collate)
+				patches = differ.MakePatches(File.ReadAllLines(Path.Combine(rootDir ?? "", path1)), File.ReadAllLines(Path.Combine(rootDir ?? "", path2)), numContextLines)
 			};
 		}
 	}
