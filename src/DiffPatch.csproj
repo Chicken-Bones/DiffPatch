@@ -22,4 +22,7 @@
 			<PackagePath></PackagePath>
 		</None>
   </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.6.3" />
+  </ItemGroup>
 </Project>

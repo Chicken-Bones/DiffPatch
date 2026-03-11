@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -304,10 +304,13 @@ namespace CodeChicken.DiffPatch
 			return bestMatch;
 		}
 
+		public static float MatchLines(string s, string t)
+			=> MatchLines(s.AsSpan(), t.AsSpan());
+
 		//assumes the lines are in word to char mode
 		//return 0.0 poor match to 1.0 perfect match
 		//uses LevenshtienDistance. A distance with half the maximum number of errors is considered a 0.0 scored match
-		public static float MatchLines(string s, string t) {
+		public static float MatchLines(ReadOnlySpan<char> s, ReadOnlySpan<char> t) {
 			int d = LevenshteinDistance(s, t);
 			if (d == 0)
 				return 1f;//perfect match
@@ -317,7 +320,7 @@ namespace CodeChicken.DiffPatch
 		}
 
 		//https://en.wikipedia.org/wiki/Levenshtein_distance
-		public static int LevenshteinDistance(string s, string t) {
+		public static int LevenshteinDistance(ReadOnlySpan<char> s, ReadOnlySpan<char> t) {
 			// degenerate cases
 			if (s == t) return 0;
 			if (s.Length == 0) return t.Length;
