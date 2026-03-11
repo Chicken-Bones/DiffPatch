@@ -273,6 +273,10 @@ namespace CodeChicken.DiffPatch
 			for (int i = 0, j = 0, ploc = -1; i < patch.length1; i++) {
 				int mloc = match[i];
 
+				// keep insert lines the same
+				while (diffs[j].op == Operation.INSERT)
+					j++;
+
 				//insert extra target lines into patch
 				if (mloc >= 0 && ploc >= 0 && mloc - ploc > 1) {
 					//delete an unmatched target line if the surrounding diffs are also DELETE, otherwise use it as context
@@ -283,10 +287,6 @@ namespace CodeChicken.DiffPatch
 						diffs.Insert(j++, new Diff(op, lines[l]));
 				}
 				ploc = mloc;
-
-				//keep insert lines the same
-				while (diffs[j].op == Operation.INSERT)
-					j++;
 
 				if (mloc < 0) //unmatched context line
 					diffs.RemoveAt(j);
