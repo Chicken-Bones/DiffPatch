@@ -207,7 +207,7 @@ namespace CodeChicken.DiffPatch
 			return path;
 		}
 
-		public string Visualise() {
+		public string Visualize() {
 			var path = Path();
 			var sb = new StringBuilder();
 			for (int j = 0; j <= maxOffset; j++) {
@@ -220,8 +220,26 @@ namespace CodeChicken.DiffPatch
 					sb.Append(score == 100 ? "%%" : score.ToString("D2"));
 					sb.Append(inPath ? ']' : ' ');
 				}
+
 				sb.AppendLine();
 			}
+
+
+			sb.Append("-:");
+			sb.Append("  ");
+			for (int i = 1; i < patternLength; i++) {
+				int offset = path[i] - path[i-1] - 1;
+				var penalty = (int)Math.Round(-0.5f * offset * 100);
+				if (path[i] < 0 || penalty == 0)
+					sb.Append("    ");
+				else
+					sb.Append($"{penalty,-4}");
+			}
+			sb.AppendLine();
+
+			var sum = matches[firstNode].nodes[0].sum * 100;
+			sb.AppendLine($"Total Score: {(int)Math.Round(sum)} / {patternLength * 100} = {(int)Math.Round(sum / patternLength)}%");
+
 			return sb.ToString();
 		}
 
