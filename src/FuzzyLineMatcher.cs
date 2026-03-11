@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -285,7 +285,7 @@ namespace CodeChicken.DiffPatch
 			}
 
 			if (pattern.Count == 0)
-				return new int[0];
+				return [];
 
 			float bestScore = MinMatchScore;
 			int[] bestMatch = null;
@@ -340,9 +340,7 @@ namespace CodeChicken.DiffPatch
 
 			for (int i = 0; i < s.Length; i++) {
 				// swap v1 to v0, reuse old v0 as new v1
-				var tmp = v0;
-				v0 = v1;
-				v1 = tmp;
+				(v1, v0) = (v0, v1);
 
 				// calculate v1 (current row distances) from the previous row v0
 

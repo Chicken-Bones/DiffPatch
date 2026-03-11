@@ -122,7 +122,7 @@ namespace CodeChicken.DiffPatch
 		//https://en.wikipedia.org/wiki/Patience_sorting
 		public static int[] LASIndices(IReadOnlyList<int> sequence) {
 			if (sequence.Count == 0)
-				return new int[0];
+				return [];
 			
 			var pileTops = new List<LCANode> {new LCANode(0, null)};
 			for (int i = 1; i < sequence.Count; i++) {

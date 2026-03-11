@@ -110,7 +110,7 @@ namespace CodeChicken.DiffPatch
 		private string lmText;
 		private List<string> wmLines;
 
-		public FuzzyMatchOptions FuzzyOptions { get; set; } = new FuzzyMatchOptions();
+		public FuzzyMatchOptions FuzzyOptions { get; set; } = new();
 
 		public Patcher(IEnumerable<Patch> patches, IEnumerable<string> lines, CharRepresenter charRep = null) {
 			this.patches = patches.Select(p => new WorkingPatch(p)).ToList();
@@ -311,7 +311,7 @@ namespace CodeChicken.DiffPatch
 		
 		public static (int[] match, float score) FuzzyMatch(IReadOnlyList<string> wmPattern, IReadOnlyList<string> wmText, int loc, FuzzyMatchOptions options = default, LineRange[] ranges = default) {
 			if (ranges == null)
-				ranges = new LineRange[] { new LineRange { length = wmText.Count } };
+				ranges = [new LineRange { length = wmText.Count }];
 
 			options ??= new();
 
@@ -348,7 +348,7 @@ namespace CodeChicken.DiffPatch
 				this.dir = dir;
 				this.mms = mms;
 				this.penaltyPerLine = penaltyPerLine;
-				active = new LineRange();
+				active = new();
 				penalty = -0.1f; // start penalty at -10%, to give some room for finding the best match if it's not "too far"
 			}
 
