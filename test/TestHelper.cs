@@ -53,6 +53,14 @@ public static class TestHelper
 			patcher.FuzzyOptions = fuzzyOptions;
 
 		patcher.Patch(mode);
+
+		var lastOffset = 0;
+		foreach (var r in patcher.Results.Where(r => r.success)) {
+			var totalOffset = r.appliedPatch.start2 - r.patch.start1;
+			Assert.AreEqual(totalOffset - lastOffset, r.offset);
+			lastOffset = totalOffset;
+		}
+
 		return patcher;
 	}
 
@@ -66,7 +74,7 @@ public static class TestHelper
 		return RunPatcher(testName, patchName, mode, fuzzyOptions).Results.Single();
 	}
 
-	public static Patcher.Result AssertPatch(
+	public static Patcher.Result[] AssertMultiPatch(
 		Patcher.Mode mode = Patcher.Mode.EXACT,
 		Patcher.FuzzyMatchOptions fuzzyOptions = null,
 		string testName = null,
@@ -86,6 +94,16 @@ public static class TestHelper
 			CollectionAssert.AreEqual(expected, patcher.ResultLines);
 		}
 
-		return patcher.Results.Single();
+		return patcher.Results.ToArray();
+	}
+
+	public static Patcher.Result AssertPatch(
+		Patcher.Mode mode = Patcher.Mode.EXACT,
+		Patcher.FuzzyMatchOptions fuzzyOptions = null,
+		string testName = null,
+		string outputName = null,
+		[CallerMemberName] string patchName = null)
+	{
+		return AssertMultiPatch(mode, fuzzyOptions, testName, outputName, patchName).Single();
 	}
 }

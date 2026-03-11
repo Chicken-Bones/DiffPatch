@@ -185,4 +185,25 @@ public class PatchTests
 
 		Assert.IsGreaterThan(withPenalty.appliedPatch.start2 + minOffset, withoutPenalty.appliedPatch.start2, $"Patch without penalty should apply at a much higher offset");
 	}
+
+	[TestMethod]
+	public void MultiPatchOffset()
+	{
+		// 3 hunks. The patch header positions are outdated due to inserted lines:
+		// Hunk 1: header says line 5, actual at line 7 → offset 2
+		// Hunk 2: header says line 9, searchOffset=2 → loc=11, actual at line 14 → offset 3
+		// Hunk 3: header says line 13, searchOffset=5 → loc=18, actual at line 18 → offset 0 (EXACT via accumulated searchOffset)
+		var results = TestHelper.AssertMultiPatch(mode: Patcher.Mode.OFFSET);
+
+		Assert.AreEqual(3, results.Length);
+
+		Assert.AreEqual(Patcher.Mode.OFFSET, results[0].mode);
+		Assert.AreEqual(2, results[0].offset);
+
+		Assert.AreEqual(Patcher.Mode.OFFSET, results[1].mode);
+		Assert.AreEqual(3, results[1].offset);
+
+		Assert.AreEqual(Patcher.Mode.EXACT, results[2].mode);
+		Assert.AreEqual(0, results[2].offset);
+	}
 }

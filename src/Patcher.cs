@@ -257,7 +257,7 @@ namespace CodeChicken.DiffPatch
 
 			int at = match.First(i => i >= 0); //if the patch needs lines trimmed off it, the early match entries will be negative
 			patch.Succeed(Mode.FUZZY, ApplyExactAt(at, fuzzyPatch));
-			patch.AddOffsetResult(fuzzyPatch.start2 - loc, lines.Count);
+			patch.AddOffsetResult(at - loc, lines.Count);
 			patch.AddFuzzyResult(matchQuality);
 			return true;
 		}
