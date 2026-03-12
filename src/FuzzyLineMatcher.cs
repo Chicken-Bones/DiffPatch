@@ -9,6 +9,7 @@ namespace CodeChicken.DiffPatch
 	public class MatchMatrix
 	{
 		public const int DefaultMaxOffset = 5;
+		public const float DefaultInsertedLinePenalty = 0.5f;
 
 		private class MatchNodes
 		{
@@ -56,6 +57,7 @@ namespace CodeChicken.DiffPatch
 		private readonly LineRange range;
 		//maximum offset between line matches in a run
 		private readonly int maxOffset;
+		private readonly float insertedLinePenalty;
 
 		public LineRange WorkingRange { get; }
 
@@ -67,13 +69,14 @@ namespace CodeChicken.DiffPatch
 		//offset index of first node in best path
 		private int firstNode;
 
-		public MatchMatrix(IReadOnlyList<string> pattern, IReadOnlyList<string> search, int maxOffset = DefaultMaxOffset, LineRange range = default) {
+		public MatchMatrix(IReadOnlyList<string> pattern, IReadOnlyList<string> search, int maxOffset = DefaultMaxOffset, float insertedLinePenalty = DefaultInsertedLinePenalty, LineRange range = default) {
 			if (range == default)
 				range = new LineRange { length = search.Count };
 
 			patternLength = pattern.Count;
 			this.range = range;
 			this.maxOffset = maxOffset;
+			this.insertedLinePenalty = insertedLinePenalty;
 			WorkingRange = new LineRange { first = range.start - maxOffset, last = range.end - patternLength };
 
 			matches = new StraightMatch[maxOffset + 1];
@@ -148,7 +151,7 @@ namespace CodeChicken.DiffPatch
 						if (l >= patternLength) continue;
 
 						float sum = matches[k].nodes[l].sum;
-						if (k > j) sum -= 0.5f * (k - j); //penalty for skipping lines in search text
+						if (k > j) sum -= insertedLinePenalty * (k - j); //penalty for skipping lines in search text
 
 						if (sum > maxsum) {
 							maxk = k;
@@ -229,7 +232,7 @@ namespace CodeChicken.DiffPatch
 			sb.Append("  ");
 			for (int i = 1; i < patternLength; i++) {
 				int offset = path[i] - path[i-1] - 1;
-				var penalty = (int)Math.Round(-0.5f * offset * 100);
+				var penalty = (int)Math.Round(-insertedLinePenalty * offset * 100);
 				if (path[i] < 0 || penalty == 0)
 					sb.Append("    ");
 				else
@@ -257,6 +260,7 @@ namespace CodeChicken.DiffPatch
 		
 		public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
 		public float MinMatchScore { get; set; } = DefaultMinMatchScore;
+		public float InsertedLinePenalty { get; set; } = MatchMatrix.DefaultInsertedLinePenalty;
 
 		public void MatchLinesByWords(int[] matches, IReadOnlyList<string> wmLines1, IReadOnlyList<string> wmLines2) {
 			foreach (var (range1, range2) in LineMatching.UnmatchedRanges(matches, wmLines2.Count)) {
@@ -290,7 +294,7 @@ namespace CodeChicken.DiffPatch
 			float bestScore = MinMatchScore;
 			int[] bestMatch = null;
 
-			var mm = new MatchMatrix(pattern, search, MaxMatchOffset);
+			var mm = new MatchMatrix(pattern, search, MaxMatchOffset, InsertedLinePenalty);
 			for(int i = mm.WorkingRange.first; mm.Match(i, out float score); i++) {
 				if (score > bestScore) {
 					bestScore = score;

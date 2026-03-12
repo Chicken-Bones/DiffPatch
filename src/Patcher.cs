@@ -95,6 +95,7 @@ namespace CodeChicken.DiffPatch
 		{
 			public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
 			public float MinMatchScore { get; set; } = FuzzyLineMatcher.DefaultMinMatchScore;
+			public float InsertedLinePenalty { get; set; } = MatchMatrix.DefaultInsertedLinePenalty;
 			public bool EnableDistancePenalty { get; set; } = true;
 		}
 
@@ -316,8 +317,8 @@ namespace CodeChicken.DiffPatch
 			options ??= new();
 
 			// we're creating twice as many MatchMatrix objects as we need, incurring some wasted allocation and setup time, but it reads easier than trying to precompute all the edge cases
-			var fwdMatchers = ranges.Select(r => new MatchMatrix(wmPattern, wmText, options.MaxMatchOffset, r)).SkipWhile(m => loc > m.WorkingRange.last).ToArray();
-			var revMatchers = ranges.Reverse().Select(r => new MatchMatrix(wmPattern, wmText, options.MaxMatchOffset, r)).SkipWhile(m => loc < m.WorkingRange.first).ToArray();
+			var fwdMatchers = ranges.Select(r => new MatchMatrix(wmPattern, wmText, options.MaxMatchOffset, options.InsertedLinePenalty, r)).SkipWhile(m => loc > m.WorkingRange.last).ToArray();
+			var revMatchers = ranges.Reverse().Select(r => new MatchMatrix(wmPattern, wmText, options.MaxMatchOffset, options.InsertedLinePenalty, r)).SkipWhile(m => loc < m.WorkingRange.first).ToArray();
 
 			int warnDist = OffsetWarnDistance(wmPattern.Count, wmText.Count);
 			float penaltyPerLine = options.EnableDistancePenalty ? 1f / (10*warnDist) : 0;
