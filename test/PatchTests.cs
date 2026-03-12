@@ -32,7 +32,7 @@ public class PatchTests
 			mode: Patcher.Mode.FUZZY,
 			testName: "SimpleInsert",
 			patchName: "FuzzyPatch",
-			fuzzyOptions: new Patcher.FuzzyMatchOptions { MinMatchScore = 0.95f });
+			fuzzyOptions: new FuzzyMatchOptions { MinMatchScore = 0.95f });
 		Assert.IsFalse(result.success, "Patch should fail when min match score exceeds actual quality");
 	}
 
@@ -97,7 +97,7 @@ public class PatchTests
 			testName: "ConfigInsertedLines",
 			patchName: "Config_LineMatched",
 			outputName: "ConfigInsertedLines_MaxMatchOffset1",
-			fuzzyOptions: new Patcher.FuzzyMatchOptions { MaxMatchOffset = 1 });
+			fuzzyOptions: new FuzzyMatchOptions { MaxMatchOffset = 1 });
 
 		Assert.AreEqual(0.62f, result.fuzzyQuality, 0.01f, "Expected quality");
 	}
@@ -119,7 +119,7 @@ public class PatchTests
 			testName: "ConfigInsertedLines",
 			patchName: "Config_LineMatched",
 			outputName: "ConfigInsertedLines_MaxMatchOffset2",
-			fuzzyOptions: new Patcher.FuzzyMatchOptions { MaxMatchOffset = 2 });
+			fuzzyOptions: new FuzzyMatchOptions { MaxMatchOffset = 2 });
 		Assert.AreEqual(0.62f, result.fuzzyQuality, 0.01f, "Expected quality");
 	}
 
@@ -139,7 +139,7 @@ public class PatchTests
 			testName: "ConfigInsertedLines",
 			patchName: "Config_LineMatched",
 			outputName: "ConfigInsertedLines_LowPenalty",
-			fuzzyOptions: new Patcher.FuzzyMatchOptions { MaxMatchOffset = 2, InsertedLinePenalty = 0.25f });
+			fuzzyOptions: new FuzzyMatchOptions { MaxMatchOffset = 2, InsertedLinePenalty = 0.25f });
 		Assert.AreEqual(0.67f, result.fuzzyQuality, 0.01f, "Expected quality");
 	}
 
@@ -168,7 +168,7 @@ public class PatchTests
 			testName: "MaxMatchOffsetLocation",
 			patchName: "Config_LineMatched",
 			outputName: "MaxMatchOffsetLocation0",
-			fuzzyOptions: new Patcher.FuzzyMatchOptions { MaxMatchOffset = 0 });
+			fuzzyOptions: new FuzzyMatchOptions { MaxMatchOffset = 0 });
 		Assert.AreEqual(0.70f, zeroOffset.fuzzyQuality, 0.01f, "Expected quality");
 	}
 
@@ -185,7 +185,7 @@ public class PatchTests
 		// Total Score: 528 / 600 = 88%
 		var withPenalty = TestHelper.AssertPatch(
 			mode: Patcher.Mode.FUZZY,
-			fuzzyOptions: new Patcher.FuzzyMatchOptions { MaxMatchOffset = 0 });
+			fuzzyOptions: new FuzzyMatchOptions { MaxMatchOffset = 0 });
 		Assert.AreEqual(0.88f, withPenalty.fuzzyQuality, 0.01f, "Expected quality");
 
 		// 0:[%%][%%][%%][%%][75][%%]
@@ -193,7 +193,7 @@ public class PatchTests
 		var withoutPenalty = TestHelper.AssertPatch(
 			mode: Patcher.Mode.FUZZY,
 			outputName: "DistancePenaltyOff",
-			fuzzyOptions: new Patcher.FuzzyMatchOptions { EnableDistancePenalty = false, MaxMatchOffset = 0 });
+			fuzzyOptions: new FuzzyMatchOptions { EnableDistancePenalty = false, MaxMatchOffset = 0 });
 		Assert.AreEqual(0.96f, withoutPenalty.fuzzyQuality, 0.01f, "Expected quality");
 
 		// OffsetWarnDistance impl

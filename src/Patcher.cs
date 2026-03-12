@@ -91,14 +91,6 @@ namespace CodeChicken.DiffPatch
 			}
 		}
 
-		public class FuzzyMatchOptions
-		{
-			public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
-			public float MinMatchScore { get; set; } = FuzzyLineMatcher.DefaultMinMatchScore;
-			public float InsertedLinePenalty { get; set; } = MatchMatrix.DefaultInsertedLinePenalty;
-			public bool EnableDistancePenalty { get; set; } = true;
-		}
-
 		//the offset distance which constitutes a warning for a patch
 		//currently either 10% of file length, or 10x patch length, whichever is longer
 		public static int OffsetWarnDistance(int patchLength, int fileLength) => Math.Max(patchLength * 10, fileLength / 10);

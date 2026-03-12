@@ -6,6 +6,16 @@ using System.Text;
 
 namespace CodeChicken.DiffPatch
 {
+	public class FuzzyMatchOptions
+	{
+		public const float DefaultMinMatchScore = 0.5f;
+
+		public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
+		public float MinMatchScore { get; set; } = DefaultMinMatchScore;
+		public float InsertedLinePenalty { get; set; } = MatchMatrix.DefaultInsertedLinePenalty;
+		public bool EnableDistancePenalty { get; set; } = true;
+	}
+
 	public class MatchMatrix
 	{
 		public const int DefaultMaxOffset = 5;
@@ -256,11 +266,7 @@ namespace CodeChicken.DiffPatch
 
 	public class FuzzyLineMatcher
 	{
-		public const float DefaultMinMatchScore = 0.5f;
-		
-		public int MaxMatchOffset { get; set; } = MatchMatrix.DefaultMaxOffset;
-		public float MinMatchScore { get; set; } = DefaultMinMatchScore;
-		public float InsertedLinePenalty { get; set; } = MatchMatrix.DefaultInsertedLinePenalty;
+		public FuzzyMatchOptions Options { get; set; } = new();
 
 		public void MatchLinesByWords(int[] matches, IReadOnlyList<string> wmLines1, IReadOnlyList<string> wmLines2) {
 			foreach (var (range1, range2) in LineMatching.UnmatchedRanges(matches, wmLines2.Count)) {
@@ -291,10 +297,10 @@ namespace CodeChicken.DiffPatch
 			if (pattern.Count == 0)
 				return [];
 
-			float bestScore = MinMatchScore;
+			float bestScore = Options.MinMatchScore;
 			int[] bestMatch = null;
 
-			var mm = new MatchMatrix(pattern, search, MaxMatchOffset, InsertedLinePenalty);
+			var mm = new MatchMatrix(pattern, search, Options.MaxMatchOffset, Options.InsertedLinePenalty);
 			for(int i = mm.WorkingRange.first; mm.Match(i, out float score); i++) {
 				if (score > bestScore) {
 					bestScore = score;

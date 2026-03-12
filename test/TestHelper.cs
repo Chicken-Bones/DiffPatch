@@ -43,7 +43,7 @@ public static class TestHelper
 		}
 	}
 
-	private static Patcher RunPatcher(string testName, string patchName, Patcher.Mode mode, Patcher.FuzzyMatchOptions fuzzyOptions)
+	private static Patcher RunPatcher(string testName, string patchName, Patcher.Mode mode, FuzzyMatchOptions fuzzyOptions)
 	{
 		var linesA = File.ReadAllLines(FindTestFile(TestDataDir, testName, "_a"));
 		var patchFile = PatchFile.FromText(File.ReadAllText(Path.Combine(TestDataDir, $"{patchName}.patch")));
@@ -66,7 +66,7 @@ public static class TestHelper
 
 	public static Patcher.Result Patch(
 		Patcher.Mode mode = Patcher.Mode.EXACT,
-		Patcher.FuzzyMatchOptions fuzzyOptions = null,
+		FuzzyMatchOptions fuzzyOptions = null,
 		string testName = null,
 		[CallerMemberName] string patchName = null)
 	{
@@ -76,7 +76,7 @@ public static class TestHelper
 
 	public static Patcher.Result[] AssertMultiPatch(
 		Patcher.Mode mode = Patcher.Mode.EXACT,
-		Patcher.FuzzyMatchOptions fuzzyOptions = null,
+		FuzzyMatchOptions fuzzyOptions = null,
 		string testName = null,
 		string outputName = null,
 		[CallerMemberName] string patchName = null)
@@ -99,7 +99,7 @@ public static class TestHelper
 
 	public static Patcher.Result AssertPatch(
 		Patcher.Mode mode = Patcher.Mode.EXACT,
-		Patcher.FuzzyMatchOptions fuzzyOptions = null,
+		FuzzyMatchOptions fuzzyOptions = null,
 		string testName = null,
 		string outputName = null,
 		[CallerMemberName] string patchName = null)
