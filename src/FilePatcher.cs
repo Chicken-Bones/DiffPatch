@@ -19,11 +19,13 @@ namespace CodeChicken.DiffPatch
 			baseLines = File.ReadAllLines(BasePath);
 		}
 
-		public void Patch(Patcher.Mode mode) {
+		public void Patch(Patcher.Mode mode, FuzzyMatchOptions fuzzyOptions = null) {
 			if (baseLines == null)
 				LoadBaseFile();
 
 			var patcher = new Patcher(patchFile.patches, baseLines);
+			if (fuzzyOptions != null)
+				patcher.FuzzyOptions = fuzzyOptions;
 			patcher.Patch(mode);
 			results = patcher.Results.ToList();
 			patchedLines = patcher.ResultLines;
