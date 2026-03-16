@@ -1,0 +1,15 @@
+@@ -6,3 +6,3 @@
+ 	{
+-		var x = "One";
++		var x = "One-patched";
+ 	}
+@@ -11,3 +11,3 @@
+ 	{
+-		var x = "Two";
++		var x = "Two-patched";
+ 	}
+@@ -16,3 +16,3 @@
+ 	{
+-		var x = "Three";
++		var x = "Three-patched";
+ 	}

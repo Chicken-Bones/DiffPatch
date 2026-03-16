@@ -54,11 +54,16 @@ public static class TestHelper
 
 		patcher.Patch(mode);
 
-		var lastOffset = 0;
+		var maxMatchOffset = fuzzyOptions?.MaxMatchOffset ?? MatchMatrix.DefaultMaxOffset;
+		var cumSearchOffset = 0;
 		foreach (var r in patcher.Results.Where(r => r.success)) {
-			var totalOffset = r.appliedPatch.start2 - r.patch.start1;
-			Assert.AreEqual(totalOffset - lastOffset, r.offset);
-			lastOffset = totalOffset;
+			cumSearchOffset += r.offset;
+			var appliedOffset = r.appliedPatch.start2 - r.patch.start1;
+			if (r.mode == Patcher.Mode.FUZZY)
+				Assert.IsTrue(appliedOffset >= cumSearchOffset && appliedOffset <= cumSearchOffset + maxMatchOffset,
+					$"appliedOffset {appliedOffset} not in [{cumSearchOffset}, {cumSearchOffset + maxMatchOffset}]");
+			else
+				Assert.AreEqual(cumSearchOffset, appliedOffset);
 		}
 
 		return patcher;

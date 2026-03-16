@@ -207,6 +207,80 @@ public class PatchTests
 	}
 
 	[TestMethod]
+	public void MissingContext1()
+	{
+		var results = TestHelper.AssertMultiPatch(
+			mode: Patcher.Mode.FUZZY,
+			testName: "MissingContext1",
+			patchName: "MissingContext");
+		Assert.AreEqual(2, results.Length);
+		Assert.AreEqual(Patcher.Mode.FUZZY, results[0].mode);
+		Assert.AreEqual(Patcher.Mode.EXACT, results[1].mode);
+	}
+
+	[TestMethod]
+	public void MissingContext2()
+	{
+		var results = TestHelper.AssertMultiPatch(
+			mode: Patcher.Mode.FUZZY,
+			testName: "MissingContext2",
+			patchName: "MissingContext");
+		Assert.AreEqual(2, results.Length);
+		Assert.AreEqual(Patcher.Mode.FUZZY, results[0].mode);
+		Assert.AreEqual(Patcher.Mode.OFFSET, results[1].mode);
+	}
+
+	[TestMethod]
+	public void MissingContext4()
+	{
+		var results = TestHelper.AssertMultiPatch(
+			mode: Patcher.Mode.FUZZY,
+			testName: "MissingContext4",
+			patchName: "MissingContext");
+		Assert.AreEqual(2, results.Length);
+		Assert.AreEqual(Patcher.Mode.FUZZY, results[0].mode);
+		Assert.AreEqual(Patcher.Mode.OFFSET, results[1].mode);
+	}
+
+	[TestMethod]
+	public void MissingContext5()
+	{
+		var results = TestHelper.AssertMultiPatch(
+			mode: Patcher.Mode.FUZZY,
+			testName: "MissingContext5",
+			patchName: "MissingContext");
+		Assert.AreEqual(2, results.Length);
+		Assert.AreEqual(Patcher.Mode.FUZZY, results[0].mode);
+		Assert.AreEqual(Patcher.Mode.OFFSET, results[1].mode);
+	}
+
+	[TestMethod]
+	public void ReorderOffset()
+	{
+		var results = TestHelper.AssertMultiPatch(
+			mode: Patcher.Mode.OFFSET,
+			testName: "ReorderOffset",
+			patchName: "Reorder");
+		Assert.AreEqual(3, results.Length);
+		Assert.AreEqual(Patcher.Mode.EXACT, results[0].mode);
+		Assert.AreEqual(Patcher.Mode.OFFSET, results[1].mode);
+		Assert.AreEqual(Patcher.Mode.OFFSET, results[2].mode);
+	}
+
+	[TestMethod]
+	public void ReorderFuzzy()
+	{
+		var results = TestHelper.AssertMultiPatch(
+			mode: Patcher.Mode.FUZZY,
+			testName: "ReorderFuzzy",
+			patchName: "Reorder");
+		Assert.AreEqual(3, results.Length);
+		Assert.AreEqual(Patcher.Mode.FUZZY, results[0].mode);
+		Assert.AreEqual(Patcher.Mode.FUZZY, results[1].mode);
+		Assert.AreEqual(Patcher.Mode.FUZZY, results[2].mode);
+	}
+
+	[TestMethod]
 	public void MultiPatchOffset()
 	{
 		// 3 hunks. The patch header positions are outdated due to inserted lines:
