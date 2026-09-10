@@ -6,6 +6,9 @@ namespace CodeChicken.DiffPatch
 {
 	public class CharRepresenter
 	{
+		public static bool IsIdentifierStart(char c) => char.IsLetter(c) || c == '_';
+		public static bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_';
+
 		private readonly List<string> charToLine = new List<string>();
 		private readonly Dictionary<string, char> lineToChar = new Dictionary<string, char>();
 
@@ -53,7 +56,7 @@ namespace CodeChicken.DiffPatch
 				char c = line[i];
 				//identify word
 				len = 1;
-				if (char.IsLetter(c)) while (i + len < line.Length && char.IsLetterOrDigit(line, i + len)) len++;
+				if (IsIdentifierStart(c)) while (i + len < line.Length && IsIdentifierPart(line[i + len])) len++;
 				else if (char.IsDigit(c)) while (i + len < line.Length && char.IsDigit(line, i + len)) len++;
 				else if (c == ' ' || c == '\t') while (i + len < line.Length && line[i + len] == c) len++;
 				string word = line.Substring(i, len);
@@ -76,7 +79,7 @@ namespace CodeChicken.DiffPatch
 				char c = line[i++];
 
 				//identify word
-				if (char.IsLetter(c)) while (i < line.Length && char.IsLetterOrDigit(line, i)) i++;
+				if (IsIdentifierStart(c)) while (i < line.Length && IsIdentifierPart(line[i])) i++;
 				else if (char.IsDigit(c)) while (i < line.Length && char.IsDigit(line, i)) i++;
 				else if (c == ' ' || c == '\t') while (i < line.Length && line[i] == c) i++;
 				yield return new Range(start, i);
