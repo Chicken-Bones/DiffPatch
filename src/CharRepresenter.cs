@@ -6,9 +6,6 @@ namespace CodeChicken.DiffPatch
 {
 	public class CharRepresenter
 	{
-		public static bool IsIdentifierStart(char c) => char.IsLetter(c) || c == '_';
-		public static bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_';
-
 		private readonly List<string> charToLine = new List<string>();
 		private readonly Dictionary<string, char> lineToChar = new Dictionary<string, char>();
 
@@ -60,15 +57,15 @@ namespace CodeChicken.DiffPatch
 			return new string(buf, 0, b);
 		}
 
+		private bool IsIdentifierPart(char c) => char.IsLetterOrDigit(c) || c == '_';
 		public virtual IEnumerable<Range> EnumerateWords(string line)
 		{
 			for (int i = 0; i < line.Length;) {
 				int start = i;
 				char c = line[i++];
 
-				//identify word
-				if (IsIdentifierStart(c)) while (i < line.Length && IsIdentifierPart(line[i])) i++;
-				else if (char.IsDigit(c)) while (i < line.Length && char.IsDigit(line, i)) i++;
+				// identify word
+				if (IsIdentifierPart(c)) while (i < line.Length && IsIdentifierPart(line[i])) i++;
 				else if (c == ' ' || c == '\t') while (i < line.Length && line[i] == c) i++;
 				yield return new Range(start, i);
 			}
